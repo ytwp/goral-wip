@@ -1,0 +1,12 @@
+.menu-body{
+  width: 64px;
+
+  display: flex;
+  justify-content: center;
+
+  padding-block: 16px;
+
+  /* border-style: solid; */
+  /* border-right-width: 0.1px; */
+  /* border-right-color: var(--border); */
+}

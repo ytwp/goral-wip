@@ -1,0 +1,27 @@
+.editor-container {
+  height: 100%;
+  width: 100%;
+}
+
+.custom-green {
+  background-color: rgba(119, 221, 119, 0.5);
+}
+
+.custom-red {
+  background-color: rgba(255, 105, 97, 0.5);
+}
+
+.custom-yellow {
+  background-color: rgba(255, 255, 153, 0.5);
+}
+
+.custom-purple {
+  background-color: rgba(176, 112, 255, 0.5);
+}
+
+
+.read-highlight {
+  background-color: rgba(173, 216, 230, 0.6);
+  border-bottom: 2px solid rgb(173, 216, 230);
+  z-index: 20;
+}
