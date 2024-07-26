@@ -1,4 +1,3 @@
-import '@/App.css'
 import { ErrorBoundary } from '@/components/common/error'
 import {
   HashRouter as Router,
@@ -13,6 +12,7 @@ import { hasPagePermission, routers } from '@/router';
 import NotFoundPage from '@/components/common/404';
 import { Path } from './constant';
 import { SideMenu } from './components/menu/side-menu';
+import { Toaster } from './components/ui/sonner';
 
 function App() {
   return (
@@ -46,6 +46,7 @@ function Screen() {
       ) : (
         <Authentication />
       )}
+      <Toaster />
     </ThemeProvider>
   );
 }

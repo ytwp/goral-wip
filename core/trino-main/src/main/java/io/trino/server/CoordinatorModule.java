@@ -193,6 +193,7 @@ public class CoordinatorModule
         binder.bind(QueryMonitor.class).in(Scopes.SINGLETON);
 
         // query manager
+        jaxrsBinder(binder).bind(TestResource.class);
         jaxrsBinder(binder).bind(QueryResource.class);
         jaxrsBinder(binder).bind(QueryStateInfoResource.class);
         jaxrsBinder(binder).bind(ResourceGroupStateInfoResource.class);

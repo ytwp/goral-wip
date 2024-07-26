@@ -33,6 +33,9 @@ import MonacoEditor from "../code/monaco-editor";
 import Code from "../code/";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { ColumnDef, ColumnFiltersState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, SortingState, useReactTable, VisibilityState } from "@tanstack/react-table";
+import executeSql from "@/api/query/execute-sql";
+import { getFieldValues } from "@/lib/query-data";
+import { useLeftTreesStore } from "@/store";
 
 
 const data: Payment[] = [
@@ -185,13 +188,17 @@ export function ContextMenuDemo(props: MenuModeToggleProps) {
 }
 
 export function Query() {
-
-  const [sorting, setSorting] = useState<SortingState>([])
+  const leftTreesStore = useLeftTreesStore();
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     []
-  )
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
+  );
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+
+  const [leftTreeData, setLeftTreeData] = useState<TreeDataNode[]>([]);
+
+
   const table = useReactTable({
     data,
     columns,
@@ -209,9 +216,68 @@ export function Query() {
       columnVisibility,
       rowSelection,
     },
-  })
+  });
 
-  const treeData: TreeDataNode[] = [
+  useEffect(() => {
+    const fetchData = async () => {
+      console.log("left begin--------------------")
+      executeSql("SELECT * FROM system.metadata.catalogs").then(catlogData => {
+        console.log("catlog--------------------")
+        console.log(catlogData)
+        const catlogs: string[] = getFieldValues("catalog_name", catlogData);
+        leftTreesStore.updateCatelog(catlogs)
+        catlogs.forEach(catlog => {
+          executeSql(`select * from ${catlog}.information_schema.schemata`).then(schemataData => {
+            console.log("schemata--------------------")
+            console.log(schemataData)
+            const schematas: string[] = getFieldValues("schema_name", schemataData);
+            leftTreesStore.updateSchema(catlog, schematas)
+            schematas.forEach(schemata => {
+              executeSql(`select * from ${catlog}.information_schema.tables where table_catalog = '${catlog}' and table_schema = '${schemata}'`).then(tableData => {
+                console.log("tables--------------------")
+                console.log(tableData)
+                const tables: string[] = getFieldValues("table_name", tableData);
+                leftTreesStore.updateTable(catlog, schemata, tables)
+                tables.forEach(table => {
+                  console.log(catlog, schemata, table)
+                })
+              })
+            })
+          })
+        })
+      })
+      console.log("left end--------------------")
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = leftTreesStore.leftTrees.map(leftTreeOne => {
+        const childrenTwo = leftTreeOne.children?.map(leftTreeTwo => {
+          const childrenThree = leftTreeTwo.children?.map(leftTreeThree => {
+            return { title: leftTreeThree.name, key: `${leftTreeOne.name}.${leftTreeTwo.name}.${leftTreeThree.name}`, icon: <TableOutlined />, isLeaf: true }
+          })
+          return {
+            title: leftTreeTwo.name,
+            key: `${leftTreeOne.name}.${leftTreeTwo.name}`,
+            icon: <PartitionOutlined />,
+            children: childrenThree
+          }
+        })
+        return {
+          title: leftTreeOne.name,
+          key: leftTreeOne.name,
+          icon: <DeploymentUnitOutlined />,
+          children: childrenTwo
+        }
+      })
+      setLeftTreeData(data)
+    };
+    fetchData();
+  }, [leftTreesStore.leftTrees]);
+
+  const treeData222: TreeDataNode[] = [
     {
       title: 'mysql',
       key: 'mysql',
@@ -302,31 +368,36 @@ export function Query() {
               </Button>
             </div>
           </div>
-          <div className="h-full p-3">
-            <ConfigProvider
-              theme={{
-                token: {
-                  colorBgContainer: 'transparent',
-                  colorText: ''
-                },
-                components: {
-                  Tree: {
-                    directoryNodeSelectedBg: 'rgba(22,119,255,0.2)',
-                    directoryNodeSelectedColor: '',
+          <div className="h-full">
+            <ScrollArea className="p-3" style={{ height: `calc(100vh - 3.5rem)` }}>
+              <ConfigProvider
+                theme={{
+                  token: {
+                    colorBgContainer: 'transparent',
+                    colorText: ''
                   },
-                },
-              }}
-            >
-              <DirectoryTree
-                showLine={true}
-                showIcon={true}
-                blockNode={true}
-                defaultExpandedKeys={[]}
-                titleRender={(nodeData) => { return <ContextMenuDemo node={nodeData}></ContextMenuDemo> }}
-                onSelect={onSelect}
-                treeData={treeData}
-              />
-            </ConfigProvider>
+                  components: {
+                    Tree: {
+                      directoryNodeSelectedBg: 'rgba(22,119,255,0.2)',
+                      directoryNodeSelectedColor: '',
+                    },
+                  },
+                }}
+              >
+                <div className="">
+                  <DirectoryTree
+                    showLine={true}
+                    showIcon={true}
+                    blockNode={true}
+                    defaultExpandedKeys={[]}
+                    titleRender={(nodeData) => { return <ContextMenuDemo node={nodeData}></ContextMenuDemo> }}
+                    onSelect={onSelect}
+                    treeData={leftTreeData}
+                  />
+                </div>
+              </ConfigProvider>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
         </div>
       </ResizablePanel>

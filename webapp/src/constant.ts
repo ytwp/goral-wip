@@ -1,6 +1,7 @@
 export enum StoreKey {
   Access = "access-control",
   Config = "app-config",
+  LeftTrees = "left-trees",
 }
 
 export enum Path {
@@ -17,4 +18,11 @@ export enum Theme {
   System = "system",
   Dark = "dark",
   Light = "light",
+}
+
+export enum State {
+  QUEUED = "QUEUED",
+  FAILED = "FAILED",
+  RUNNING = "RUNNING",
+  FINISHED = "FINISHED",
 }
